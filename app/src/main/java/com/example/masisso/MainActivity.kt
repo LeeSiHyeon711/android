@@ -34,7 +34,7 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        // ✅ modelHelper 초기화 추가
+        // ✅ modelHelper 초기화
         modelHelper = ModelHelper(this)
 
         setContent {
@@ -73,32 +73,25 @@ class MainActivity : ComponentActivity() {
             if (imageBitmap != null) {
                 resultImage = imageBitmap // ✅ UI에 이미지 표시
 
-                val detectedClass = modelHelper.runLDModel(imageBitmap)  // ✅ 문자열 반환
+                // ✅ LD 모델 제거 -> 무조건 등급 판정 수행
+                val gradeResult = modelHelper.runGradeModel(imageBitmap)
+                val grade = gradeResult.first  // ✅ 등급 문자열
+                val confidence = gradeResult.second  // ✅ 확률값
 
-                if (detectedClass == 2) { // ✅ 배최장근으로 감지된 경우
-                    val (grade, confidence) = modelHelper.runGradeModel(imageBitmap)
-                    predictionResult = """
-                        🥩 배최장근이 맞아요!
-                        📊 예상 등급: $grade (%.2f%% 확률)
-                    """.trimIndent().format(confidence * 100)
+                predictionResult = """
+                    📊 예상 등급: $grade (%.2f%% 확률)
+                """.trimIndent().format(confidence * 100)
 
-                    predictionResult += when (grade) {
-                        "1++등급" -> "\n🔥 최상급 한우입니다!"
-                        "1+등급" -> "\n👌 고급 한우네요!"
-                        "1등급" -> "\n🥩 좋은 품질의 한우입니다."
-                        "2등급" -> "\n🔹 보통 등급의 한우입니다."
-                        "3등급" -> "\n⚠️ 등급이 낮은 편입니다."
-                        else -> ""
-                    }
-                } else { // ✅ 배최장근이 아닌 경우
-                    predictionResult = """
-                    ❌ 배최장근이 아닙니다.
-                    📌 분석 결과, 등급 판별이 어려운 부위입니다.
-                    📸 배최장근 사진을 올려주세요!
-                    """.trimIndent()
+                predictionResult += when (grade) {
+                    "1++등급" -> "\n🔥 최상급 한우입니다!"
+                    "1+등급" -> "\n👌 고급 한우네요!"
+                    "1등급" -> "\n🥩 좋은 품질의 한우입니다."
+                    "2등급" -> "\n🔹 보통 등급의 한우입니다."
+                    "3등급" -> "\n⚠️ 등급이 낮은 편입니다."
+                    else -> ""
                 }
 
-                Log.d("TensorFlow", "📊 LD 모델 결과: $detectedClass")
+                Log.d("TensorFlow", "📊 등급 모델 결과: $grade ($confidence)")
             }
         }
     }
